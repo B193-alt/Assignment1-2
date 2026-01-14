@@ -50,6 +50,27 @@ ansible-playbook -i inventory.ini install_sentry.yml
 Open your browser and navigate to:
 `http://34.170.25.167:9000`
 
-## Troubleshooting
-- **Connection Refused**: Sentry takes 5-10 minutes to start up. If you see this, wait and retry.
-- **SSH Timeout**: The instance might be under heavy load during the first boot. Wait a few minutes.
+## Assignment 2: Scripting & Automation (Log Rotation)
+
+A shell script located in `automation/rotate_logs.sh` handles the rotation, compression, and retention of the application log file.
+
+### How the Script Works:
+1.  **Isolation**: It uses a `copytruncate` strategy. It copies the active log file to the archive directory and then empties (truncates) the original. This allows the application to keep its file handle open without interruption.
+2.  **Compression**: Immediately after rotation, the archive is compressed using `gzip` to save disk space.
+3.  **Retention**: It uses the `find` command to locate and delete files in the archive directory that are older than 5 days.
+4.  **Error Handling**:
+    *   Checks for `root` permissions.
+    *   Exits gracefully if the log file is missing.
+    *   Creates required directories if they don't exist (idempotency).
+
+### Cron Schedule:
+To run this daily at midnight, add the following to your root crontab (`sudo crontab -e`):
+```cron
+0 0 * * * /path/to/automation/rotate_logs.sh >> /var/log/log_rotation.log 2>&1
+```
+
+### How to Test Manually:
+1.  Create a dummy log file: `sudo touch /var/log/application.log`
+2.  Add some data: `echo "test logs" | sudo tee -a /var/log/application.log`
+3.  Execute the script: `sudo ./automation/rotate_logs.sh`
+4.  Verify the archive: `ls /var/log/archive`

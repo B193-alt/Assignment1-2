@@ -1,0 +1,9 @@
+# Cron configuration for Log Rotation Script
+# Schedule: Run daily at midnight (00:00)
+
+0 0 * * * /opt/scripts/rotate_logs.sh >> /var/log/log_rotation.log 2>&1
+
+# To install this cron job:
+# 1. Open the crontab editor: sudo crontab -e
+# 2. Paste the line above (ensure the path to the script is correct).
+# 3. Save and exit.
