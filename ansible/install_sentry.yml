@@ -1,0 +1,58 @@
+---
+- name: Install and Configure Self-Hosted Sentry
+  hosts: sentry
+  become: true
+  vars:
+    sentry_install_dir: /opt/sentry-self-hosted
+  
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install prerequisites
+      apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+          - git
+          - curl
+        state: present
+
+    - name: Ensure Docker service is running
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Clone Sentry Self-Hosted repository
+      git:
+        repo: 'https://github.com/getsentry/self-hosted.git'
+        dest: "{{ sentry_install_dir }}"
+        version: master
+
+    - name: Run Sentry installation script (non-interactive)
+      # This script takes a long time (10-20+ mins)
+      command: "./install.sh --no-report-self-hosted-issues --skip-commit-check --no-user-prompt"
+      args:
+        chdir: "{{ sentry_install_dir }}"
+        creates: "{{ sentry_install_dir }}/sentry"
+
+    - name: Start Sentry services
+      command: "docker compose up -d"
+      args:
+        chdir: "{{ sentry_install_dir }}"
+        
+    - name: Wait for Sentry to be up
+      wait_for:
+        port: 9000
+        delay: 10
+        timeout: 300
+
+    - name: Post-Install Instructions
+      debug:
+        msg: 
+          - "Sentry is now running!"
+          - "You must create a user manually since we skipped prompts."
+          - "Run this on the server: cd /opt/sentry-self-hosted && sudo docker compose run --rm web createuser"

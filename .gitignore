@@ -1,0 +1,5 @@
+*.tfstate*
+.terraform/
+*.tfvars
+gcp_key
+
