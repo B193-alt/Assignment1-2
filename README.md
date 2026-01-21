@@ -48,7 +48,7 @@ ansible-playbook -i inventory.ini install_sentry.yml
 
 ### 3. Access Sentry
 Open your browser and navigate to:
-`http://34.170.25.167:9000`
+`http://34.31.185.107:9000`
 
 ## Assignment 2: Scripting & Automation (Log Rotation)
 
